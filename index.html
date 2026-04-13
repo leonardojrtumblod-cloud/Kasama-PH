@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kasama PH | Voice-First Senior Care Assistant</title>
+    <meta name="description" content="Kasama PH is a compassionate, voice-first senior care assistant designed for Filipino families. Helping Lola and Lolo with medication reminders, emergency SOS, and more." />
+    <meta name="keywords" content="senior care, elderly care, filipino senior care, voice assistant for seniors, medication reminders, emergency SOS, Kasama PH" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://kasama-ph.vercel.app/" />
+    <meta property="og:title" content="Kasama PH | Alaga ni Kasama, Kampante ang Pamilya" />
+    <meta property="og:description" content="The first voice-first, culturally-sensitive AI assistant designed specifically for Filipino seniors and their families. Join the waitlist!" />
+    <meta property="og:image" content="https://kasama-ph.vercel.app/kasama-grandparents-celebration.webp" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://kasama-ph.vercel.app/" />
+    <meta property="twitter:title" content="Kasama PH | Taglish AI for Filipino Seniors" />
+    <meta property="twitter:description" content="Bridging the gap for our Lolos and Lolas with Taglish AI. Sign up for early access." />
+    <meta property="twitter:image" content="https://kasama-ph.vercel.app/kasama-grandparents-celebration.webp" />
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://kasama-ph.vercel.app; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://www.google-analytics.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self';">
+    
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#9f1239" />
+    <link rel="icon" type="image/webp" href="/kasama-logo.webp" />
+    <link rel="apple-touch-icon" href="/kasama-logo.webp" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Unregister any existing service workers
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
+

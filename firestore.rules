@@ -1,0 +1,199 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: seniors
+    // Fields:
+    //   - uid: string (required)
+    //   - name: string (required)
+    //   - birth_year: number (required)
+    //   - dialect_preference: string (enum)
+    //   - mobility_level: string (enum)
+    //   - emergency_contacts: list of objects
+    //   - health_conditions: list of strings
+    //
+    // Collection: medications
+    // Fields:
+    //   - senior_uid: string (required)
+    //   - name: string (required)
+    //   - dosage: string
+    //   - schedule: list of strings (required)
+    //   - last_taken: timestamp
+    //   - adherence_rate: number
+    //
+    // Collection: emergency_logs
+    // Fields:
+    //   - senior_uid: string (required)
+    //   - triggered_at: timestamp (required)
+    //   - location: map { latitude: number, longitude: number }
+    //   - resolved: bool
+    //   - audio_recording_url: string
+    //
+    // Collection: legacy_vault
+    // Fields:
+    //   - senior_uid: string (required)
+    //   - media_type: string (enum)
+    //   - content_url: string (required)
+    //   - recorded_at: timestamp (required)
+    //   - transcription: string
+    //   - unlock_date: timestamp
+    //   - shared_with: list of strings
+    //
+    // ===============================================================
+
+    // Collection: waitlist
+    // Fields:
+    //   - email: string (required)
+    //   - timestamp: timestamp (required)
+    //   - referralCode: string
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          request.auth.token.email == "leonardojrtumblod@gmail.com");
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.senior_uid;
+    }
+
+    function isNewDocOwner() {
+      return isAuthenticated() && request.auth.uid == request.resource.data.senior_uid;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidString(field, maxLen) {
+      return request.resource.data[field] is string && request.resource.data[field].size() <= maxLen;
+    }
+
+    function isValidNumber(field, min, max) {
+      return request.resource.data[field] is number && request.resource.data[field] >= min && request.resource.data[field] <= max;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidSenior(data) {
+      return hasRequiredFields(['uid', 'name', 'birth_year']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 128 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.birth_year is number && data.birth_year > 1900 && data.birth_year < 2027;
+    }
+
+    function isValidMedication(data) {
+      return hasRequiredFields(['senior_uid', 'name', 'schedule']) &&
+             data.senior_uid is string && data.senior_uid.size() < 128 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.schedule is list && data.schedule.size() < 24;
+    }
+
+    function isValidEmergencyLog(data) {
+      return hasRequiredFields(['senior_uid', 'triggered_at']) &&
+             data.senior_uid is string && data.senior_uid.size() < 128 &&
+             data.triggered_at is timestamp;
+    }
+
+    function isValidLegacyVaultItem(data) {
+      return hasRequiredFields(['senior_uid', 'media_type', 'content_url', 'recorded_at']) &&
+             data.senior_uid is string && data.senior_uid.size() < 128 &&
+             data.media_type in ['voice', 'photo', 'video'] &&
+             data.content_url is string && data.content_url.size() < 1024 &&
+             data.recorded_at is timestamp;
+    }
+
+    function isValidWaitlistEntry(data) {
+      return hasRequiredFields(['email', 'age', 'role', 'timestamp', 'referralCode']) &&
+             isValidEmail(data.email) && data.email.size() < 256 &&
+             data.age is number && data.age >= 0 && data.age < 120 &&
+             data.role is string && data.role.size() < 50 &&
+             data.timestamp is timestamp &&
+             data.referralCode is string && data.referralCode.size() == 7 &&
+             (!('referredBy' in data) || (data.referredBy is string && data.referredBy.size() == 7 || data.referredBy == null)) &&
+             data.referralCount == 0 &&
+             data.queuePosition is number;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.role == 'client';
+      allow update: if isAdmin();
+    }
+
+    match /seniors/{seniorId} {
+      allow read: if isOwner(seniorId) || isAdmin();
+      allow create: if isOwner(seniorId) && isValidSenior(request.resource.data);
+      allow update: if (isOwner(seniorId) && isValidSenior(request.resource.data)) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /medications/{medId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isNewDocOwner() && isValidMedication(request.resource.data);
+      allow update: if (isDocOwner() && isValidMedication(request.resource.data) && request.resource.data.senior_uid == resource.data.senior_uid) || isAdmin();
+      allow delete: if isDocOwner() || isAdmin();
+    }
+
+    match /emergency_logs/{logId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isNewDocOwner() && isValidEmergencyLog(request.resource.data);
+      allow update: if (isDocOwner() && isValidEmergencyLog(request.resource.data) && request.resource.data.senior_uid == resource.data.senior_uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /legacy_vault/{vaultId} {
+      allow read: if isDocOwner() || (isAuthenticated() && request.auth.uid in resource.data.shared_with) || isAdmin();
+      allow create: if isNewDocOwner() && isValidLegacyVaultItem(request.resource.data);
+      allow update: if (isDocOwner() && isValidLegacyVaultItem(request.resource.data) && request.resource.data.senior_uid == resource.data.senior_uid) || isAdmin();
+      allow delete: if isDocOwner() || isAdmin();
+    }
+
+    match /waitlist/{entryId} {
+      allow read: if isAdmin();
+      allow create: if isValidWaitlistEntry(request.resource.data);
+      // Allow the transaction to update referralCount for the referrer
+      allow update: if isAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['referralCount']) &&
+        request.resource.data.referralCount == resource.data.referralCount + 1
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

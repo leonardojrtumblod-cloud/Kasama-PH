@@ -1,0 +1,115 @@
+{
+  "entities": {
+    "SeniorProfile": {
+      "title": "Senior Profile",
+      "description": "Profile information for the elderly user.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "name": { "type": "string", "description": "Full name" },
+        "birth_year": { "type": "number", "description": "Year of birth" },
+        "dialect_preference": { "type": "string", "enum": ["Tagalog", "Cebuano", "Ilocano", "Hiligaynon", "Waray", "Kapampangan"] },
+        "mobility_level": { "type": "string", "enum": ["Independent", "Assisted", "Wheelchair", "Bedridden"] },
+        "emergency_contacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "phone": { "type": "string" },
+              "relationship": { "type": "string" }
+            }
+          }
+        },
+        "health_conditions": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["uid", "name", "birth_year"]
+    },
+    "Medication": {
+      "title": "Medication",
+      "description": "Medicine reminders and adherence tracking.",
+      "type": "object",
+      "properties": {
+        "senior_uid": { "type": "string" },
+        "name": { "type": "string" },
+        "dosage": { "type": "string" },
+        "schedule": { "type": "array", "items": { "type": "string", "format": "time" } },
+        "last_taken": { "type": "string", "format": "date-time" },
+        "adherence_rate": { "type": "number" }
+      },
+      "required": ["senior_uid", "name", "schedule"]
+    },
+    "EmergencyLog": {
+      "title": "Emergency Log",
+      "description": "Logs of SOS triggers.",
+      "type": "object",
+      "properties": {
+        "senior_uid": { "type": "string" },
+        "triggered_at": { "type": "string", "format": "date-time" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" }
+          }
+        },
+        "resolved": { "type": "boolean" },
+        "audio_recording_url": { "type": "string" }
+      },
+      "required": ["senior_uid", "triggered_at"]
+    },
+    "LegacyVaultItem": {
+      "title": "Legacy Vault Item",
+      "description": "Stored memories, stories, and songs.",
+      "type": "object",
+      "properties": {
+        "senior_uid": { "type": "string" },
+        "media_type": { "type": "string", "enum": ["voice", "photo", "video"] },
+        "content_url": { "type": "string" },
+        "recorded_at": { "type": "string", "format": "date-time" },
+        "transcription": { "type": "string" },
+        "unlock_date": { "type": "string", "format": "date-time" },
+        "shared_with": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["senior_uid", "media_type", "content_url", "recorded_at"]
+    },
+    "WaitlistEntry": {
+      "title": "Waitlist Entry",
+      "description": "Information for users waiting for beta access.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "age": { "type": "number", "description": "Age of the person signing up or the senior" },
+        "role": { "type": "string", "description": "Role of the person signing up (e.g., Senior Citizen, Son/Daughter)" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "referralCode": { "type": "string" },
+        "referredBy": { "type": "string", "description": "Referral code of the person who referred this user" },
+        "referralCount": { "type": "number", "description": "Number of people this user has referred" },
+        "queuePosition": { "type": "number", "description": "Calculated position in the waitlist" }
+      },
+      "required": ["email", "age", "role", "timestamp", "referralCode"]
+    }
+  },
+  "firestore": {
+    "/seniors/{seniorId}": {
+      "schema": "SeniorProfile",
+      "description": "Senior user profiles."
+    },
+    "/medications/{medId}": {
+      "schema": "Medication",
+      "description": "Medication schedules."
+    },
+    "/emergency_logs/{logId}": {
+      "schema": "EmergencyLog",
+      "description": "Emergency trigger logs."
+    },
+    "/legacy_vault/{vaultId}": {
+      "schema": "LegacyVaultItem",
+      "description": "Legacy vault items."
+    },
+    "/waitlist/{entryId}": {
+      "schema": "WaitlistEntry",
+      "description": "Waitlist signups."
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "Kasama PH",
+  "short_name": "Kasama",
+  "description": "Ang Kaibigan ng Lola at Lolo - Voice-first senior care companion.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f0",
+  "theme_color": "#f43f5e",
+  "icons": [
+    {
+      "src": "/kasama-logo.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/kasama-logo.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ]
+}

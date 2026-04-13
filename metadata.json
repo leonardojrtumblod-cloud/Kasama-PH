@@ -1,0 +1,5 @@
+{
+  "name": "Kasama PH",
+  "description": "A voice-first senior care companion app for Filipino families, featuring AI-powered character interactions for health, safety, and legacy preservation.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"]
+}
