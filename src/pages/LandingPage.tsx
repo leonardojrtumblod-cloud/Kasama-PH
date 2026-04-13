@@ -27,7 +27,7 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs, runTransact
 import { playTTS } from '../services/ttsService';
 
 // --- Iron Vault: Internal Security Entropy ---
-const VAULT_SALT = "KSMA_SANCTUARY_2026_ALPHA";
+const VAULT_SALT = "KSMA_SANCTUARY_2026_ALPHA_BYNHN";
 const SUBMISSION_COOLDOWN_MS = 5 * 60 * 1000; // 5 Minutes
 
 // --- Iron Vault: Production Logger ---
@@ -316,11 +316,11 @@ export default function LandingPage() {
               Now in Private Beta
             </div>
             <h1 className="text-5xl md:text-7xl font-black leading-[1.1] tracking-tight">
-              Building the Sanctuary <br />
-              <span className="text-rose-800">Your Parents</span> Deserve.
+              Sa Kasama, <br />
+              <span className="text-rose-800">May Kasama.</span>
             </h1>
             <p className="text-xl text-stone-600 leading-relaxed max-w-lg">
-              The first clinical-grade safety net for Filipino seniors. Manage medications and coordinate care with a 120-second emergency fail-safe—from anywhere in the world.
+              Ang Kasama PH ay binuo para sa pamilya, ngunit nananatili dahil sa komunidad. Ang iyong suporta sa aming clinical platform ay nagbibigay-daan upang magkaroon ng Kasama sa kaligtasan ang bawat senior citizen sa ating localized hubs.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -370,6 +370,9 @@ export default function LandingPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Dambana ng Kalinga (Honor Roll) */}
+      <DambanaNgKalinga />
 
       {/* Features Grid */}
       <section id="features" className="py-32 px-6">
@@ -585,6 +588,7 @@ export default function LandingPage() {
                 <p className="text-lg text-stone-600 max-w-xl mx-auto">
                   Currently accepting the first 100 families for priority onboarding. Help us build the gold standard for senior protection.
                 </p>
+                <MatchCounter />
               </div>
 
               <form onSubmit={handleWaitlistSubmit} className="flex flex-col gap-4 max-w-lg mx-auto">
@@ -793,6 +797,59 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function DambanaNgKalinga() {
+  const patrons = [
+    "Founding Family #001", "San Pedro Civic Hub", "Bayani Support Network", 
+    "Biñan Guardian Group", "Muntinlupa Relief Hub", "Founding Family #012",
+    "Laguna Sanctuary Patrons", "Metro Manila Care Givers", "OFW Nurse Alliance"
+  ];
+
+  return (
+    <div className="py-12 bg-white border-y border-stone-100 overflow-hidden relative">
+      <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white to-transparent z-10" />
+      <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white to-transparent z-10" />
+      
+      <div className="max-w-7xl mx-auto px-6 mb-8 text-center">
+        <p className="text-[10px] font-black text-rose-800 uppercase tracking-[0.3em]">Dambana ng Kalinga • Honor Roll</p>
+      </div>
+
+      <motion.div 
+        animate={{ x: [0, -1000] }}
+        transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+        className="flex gap-12 whitespace-nowrap"
+      >
+        {[...patrons, ...patrons].map((patron, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <div className="w-2 h-2 bg-rose-800 rounded-full" />
+            <span className="text-xl font-bold text-stone-900 tracking-tight">{patron}</span>
+          </div>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+function MatchCounter() {
+  return (
+    <div className="max-w-md mx-auto bg-white rounded-[12px] p-6 border border-rose-200 shadow-sm space-y-4">
+      <div className="flex justify-between items-center pb-4 border-b border-stone-100">
+        <div className="text-left">
+          <p className="text-rose-800 font-black text-2xl">100+</p>
+          <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Kabuuang Kalingang Hatid</p>
+        </div>
+        <div className="h-10 w-[1px] bg-stone-100" />
+        <div className="text-right">
+          <p className="text-rose-800 font-black text-2xl">2x Match</p>
+          <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Ang Tulong ng Kasama</p>
+        </div>
+      </div>
+      <p className="text-[11px] text-stone-500 font-medium">
+        *Bawat enrollment ay tutumbasan ng aming Founders upang suportahan ang ating mga localized clinics.
+      </p>
     </div>
   );
 }
