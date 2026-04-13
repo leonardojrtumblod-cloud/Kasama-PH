@@ -54,7 +54,7 @@ const LogicBar = () => (
       <span className="opacity-20">|</span>
       <span>Safety Cascade</span>
       <span className="opacity-20">|</span>
-      <span>Pricing</span>
+      <button onClick={() => scrollToSection('pricing')} className="hover:text-rose-400 transition-colors uppercase">Pricing</button>
     </div>
     <div className="flex items-center gap-2 text-rose-300">
       <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
@@ -563,6 +563,9 @@ export default function LandingPage() {
         </div>
       </motion.section>
 
+      {/* Pricing Section */}
+      <PricingSection />
+
       {/* Founding Families Waitlist Section */}
       <motion.section 
         id="waitlist" 
@@ -847,8 +850,13 @@ function MatchCounter() {
           <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Ang Tulong ng Kasama</p>
         </div>
       </div>
+      <div className="bg-rose-50 p-4 rounded-[12px] border border-rose-100">
+        <p className="text-[11px] text-rose-900 font-bold leading-relaxed">
+          Ang Bagong Pangako: Sa bawat pag-enroll ninyo sa ating Sanctuary (mula ₱149), ₱5 ay direktang mapupunta sa isang lokal na charity na kayo mismo ang pipili at bobotohan bawat buwan.
+        </p>
+      </div>
       <p className="text-[11px] text-stone-500 font-medium">
-        *Bawat enrollment ay tutumbasan ng aming Founders upang suportahan ang ating mga localized clinics.
+        *Bawat enrollment ay tutumbasan din ng aming Founders upang suportahan ang ating mga localized clinics.
       </p>
     </div>
   );
@@ -1024,6 +1032,94 @@ function TestimonialCard({ quote, author, role }: { quote: string, author: strin
         <p className="font-bold text-stone-900">{author}</p>
         <p className="text-sm text-stone-500">{role}</p>
       </div>
+    </div>
+  );
+}
+function PricingSection() {
+  return (
+    <motion.section 
+      id="pricing" 
+      className="py-32 bg-white px-6"
+      {...revealProps}
+    >
+      <div className="max-w-7xl mx-auto space-y-20">
+        <div className="text-center space-y-6 max-w-3xl mx-auto">
+          <h2 className="text-4xl md:text-6xl font-black tracking-tight text-stone-900">Choose Your Sanctuary</h2>
+          <p className="text-xl text-stone-600 leading-relaxed">
+            Professional protection and peace of mind. Scaled for every Filipino family.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          <PricingCard 
+            tier="Dignity & Clarity"
+            price="149"
+            description="Essential companion for seniors living with family."
+            features={[
+              "120s Emergency Cascade",
+              "Taglish Medication Logic",
+              "Daily Safety Check-ins",
+              "₱5 Monthly Charity Voice"
+            ]}
+          />
+          <PricingCard 
+            tier="Guardian Command"
+            price="649"
+            description="Full oversight for families with active caregivers."
+            isPopular
+            features={[
+              "Everything in Tier 1",
+              "Real-time Caregiver Logs",
+              "Unlimited Legacy Vault",
+              "Dedicated Protocol Hub"
+            ]}
+          />
+          <PricingCard 
+            tier="Heritage Sanctuary"
+            price="1,999"
+            description="The gold standard for the modern global Filipino family."
+            features={[
+              "Everything in Tier 2",
+              "24/7 Clinical Concierge",
+              "Priority Medical Dispatch",
+              "Ancestral Heritage Project"
+            ]}
+          />
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+function PricingCard({ tier, price, description, features, isPopular }: { tier: string, price: string, description: string, features: string[], isPopular?: boolean }) {
+  return (
+    <div className={`relative p-10 rounded-[24px] border ${isPopular ? 'border-rose-800 bg-rose-50 shadow-xl' : 'border-stone-100 bg-stone-50'} transition-all hover:scale-[1.02] flex flex-col h-full`}>
+      {isPopular && (
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-rose-800 text-white rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg">
+          Most Trusted
+        </div>
+      )}
+      <div className="space-y-4 mb-10">
+        <h3 className={`text-2xl font-black ${isPopular ? 'text-rose-800' : 'text-stone-900'}`}>{tier}</h3>
+        <div className="flex items-baseline gap-1">
+          <span className="text-4xl font-black text-stone-900">₱{price}</span>
+          <span className="text-stone-500 font-medium italic">/buwan</span>
+        </div>
+        <p className="text-sm text-stone-600 leading-relaxed font-medium">{description}</p>
+      </div>
+      
+      <ul className="space-y-4 mb-auto">
+        {features.map((feature, i) => (
+          <li key={i} className="flex items-center gap-3 text-stone-700 font-medium text-sm">
+            <CheckCircle2 className="w-5 h-5 text-rose-800 shrink-0" />
+            {feature}
+          </li>
+        ))}
+      </ul>
+
+      <button className={`w-full mt-10 py-4 rounded-[12px] font-bold text-lg transition-all ${isPopular ? 'bg-rose-800 text-white hover:bg-rose-900 shadow-lg shadow-rose-900/20' : 'bg-white text-rose-800 border-2 border-rose-800 hover:bg-rose-50'}`}>
+        Secure This Tier
+      </button>
     </div>
   );
 }
