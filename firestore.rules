@@ -61,6 +61,8 @@ service cloud.firestore {
     }
 
     function isAdmin() {
+      // SECURITY WARNING: Hardcoded identities are brittle. 
+      // Recommendation: Transition to Firebase Custom Claims for RBAC.
       return isAuthenticated() &&
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
           request.auth.token.email == "leonardojrtumblod@gmail.com");

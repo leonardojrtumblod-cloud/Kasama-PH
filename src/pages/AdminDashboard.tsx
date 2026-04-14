@@ -103,7 +103,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const isAdmin = user?.email === 'leonardojrtumblod@gmail.com';
+  const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -153,8 +153,8 @@ export default function AdminDashboard() {
     const csvContent = [
       headers.join(','),
       ...waitlist.map(entry => {
-        const date = entry.timestamp ? format(entry.timestamp.toDate(), 'yyyy-MM-dd HH:mm:ss') : 'N/A';
-        return `"${entry.email}","${entry.age || ''}","${entry.role || ''}","${date}","${entry.referralCode || ''}"`;
+        const date = entry.timestamp?.toDate ? format(entry.timestamp.toDate(), 'yyyy-MM-dd HH:mm:ss') : 'N/A';
+        return `"${entry.email || ''}","${entry.age || ''}","${entry.role || ''}","${date}","${entry.referralCode || ''}"`;
       })
     ].join('\n');
 
@@ -172,10 +172,14 @@ export default function AdminDashboard() {
   const chartData = useMemo(() => {
     const grouped: Record<string, number> = {};
     waitlist.forEach(entry => {
-      if (!entry.timestamp) return;
+      if (!entry.timestamp?.toDate) return;
       // Use full date for accurate sorting
-      const dateStr = format(entry.timestamp.toDate(), 'yyyy-MM-dd');
-      grouped[dateStr] = (grouped[dateStr] || 0) + 1;
+      try {
+        const dateStr = format(entry.timestamp.toDate(), 'yyyy-MM-dd');
+        grouped[dateStr] = (grouped[dateStr] || 0) + 1;
+      } catch (e) {
+        console.error("Invalid timestamp found:", entry.id);
+      }
     });
 
     // Sort chronologically
@@ -258,7 +262,7 @@ export default function AdminDashboard() {
   }
 
   const filteredWaitlist = waitlist.filter(entry => 
-    entry.email.toLowerCase().includes(searchTerm.toLowerCase())
+    entry.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -439,13 +443,13 @@ export default function AdminDashboard() {
                       {waitlist.slice(0, 5).map(entry => (
                         <div key={entry.id} className="flex justify-between items-center p-4 bg-stone-50 rounded-xl border border-stone-100">
                           <div className="flex flex-col pr-4 min-w-0">
-                            <div className="font-medium text-stone-900 truncate">{entry.email}</div>
+                            <div className="font-medium text-stone-900 truncate">{entry.email || 'No Email'}</div>
                             {entry.role && (
                               <div className="text-xs text-stone-500 mt-1">{entry.role}</div>
                             )}
                           </div>
                           <div className="text-xs text-stone-500 whitespace-nowrap">
-                            {entry.timestamp ? format(entry.timestamp.toDate(), 'MMM d, h:mm a') : ''}
+                            {entry.timestamp?.toDate ? format(entry.timestamp.toDate(), 'MMM d, h:mm a') : 'N/A'}
                           </div>
                         </div>
                       ))}

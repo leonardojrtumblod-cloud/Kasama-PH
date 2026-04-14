@@ -48,16 +48,18 @@ function pcmToWavUrl(base64Pcm: string, sampleRate: number = 24000): string {
 
 export async function playTTS(text: string, voiceName: string): Promise<HTMLAudioElement> {
   if (!ai) {
-    const apiKey = process.env.GEMINI_API_KEY;
+    // SECURITY WARNING: Client-side API key usage is a vulnerability. 
+    // This should be migrated to a backend Vercel Function.
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
-      console.error("Gemini API Key is missing");
+      console.error("Gemini API Key is missing. Check VITE_GEMINI_API_KEY in .env");
       throw new Error("Gemini API Key is missing");
     }
     ai = new GoogleGenAI({ apiKey });
   }
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-preview-tts",
+    model: "gemini-2.0-flash",
     contents: [{ parts: [{ text }] }],
     config: {
       responseModalities: [Modality.AUDIO],

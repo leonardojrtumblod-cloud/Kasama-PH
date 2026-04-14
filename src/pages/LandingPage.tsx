@@ -44,6 +44,14 @@ const WHITE_LIST = {
   AGE: /^[0-9]{1,3}$/
 };
 
+// --- Sanctuary Utilities ---
+const scrollToSection = (id: string) => {
+  const element = document.getElementById(id);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
 const LogicBar = () => (
   <div className="sticky top-0 z-[60] bg-rose-900 text-white/90 py-1.5 px-6 flex justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] border-b border-rose-800/50">
     <div className="flex items-center gap-4 sm:gap-6">
@@ -62,6 +70,14 @@ const LogicBar = () => (
     </div>
   </div>
 );
+
+// --- Animation: Shared Reveal Props ---
+const revealProps = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-100px" },
+  transition: { duration: 0.8, ease: "easeOut" }
+} as const;
 
 export default function LandingPage() {
   const [email, setEmail] = useState('');
@@ -86,13 +102,6 @@ export default function LandingPage() {
     offset: ["start start", "end start"]
   });
   const heroParallax = useTransform(heroScroll, [0, 1], [0, -40]);
-
-  const revealProps = {
-    initial: { opacity: 0, y: 20 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: "-100px" },
-    transition: { duration: 0.8, ease: "easeOut" }
-  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -169,11 +178,7 @@ export default function LandingPage() {
       const waitlistRef = collection(db, 'waitlist');
       const myReferralCode = Math.random().toString(36).substring(7).toUpperCase();
 
-      // 1. Get current total count for initial queue position (outside transaction)
-      const countSnapshot = await getCountFromServer(waitlistRef);
-      const totalCount = countSnapshot.data().count;
-
-      // 2. Find referrer if exists (outside transaction)
+      // 1. Find referrer if exists (outside transaction)
       let referrerDocId = null;
       if (referredBy) {
         const referrerQuery = query(waitlistRef, where('referralCode', '==', referredBy));
@@ -183,14 +188,28 @@ export default function LandingPage() {
         }
       }
 
-      // 3. Use a transaction to handle referral attribution and document creation
+      // 2. Atomic Counter & Signup Transaction
+      const counterRef = doc(db, 'counters', 'waitlist');
+      let finalPosition = 0;
+
       await runTransaction(db, async (transaction) => {
+        // A. Get and increment the counter
+        const counterDoc = await transaction.get(counterRef);
+        let newCount = 1;
+        if (counterDoc.exists()) {
+          newCount = (counterDoc.data().count || 0) + 1;
+        }
+        transaction.set(counterRef, { count: newCount }, { merge: true });
+        finalPosition = newCount;
+
+        // B. Update Referrer
         if (referrerDocId) {
           transaction.update(doc(db, 'waitlist', referrerDocId), {
             referralCount: increment(1)
           });
         }
 
+        // C. Create Waitlist Entry
         const newDocRef = doc(waitlistRef);
         transaction.set(newDocRef, {
           email,
@@ -201,7 +220,7 @@ export default function LandingPage() {
           referralCode: myReferralCode,
           referredBy: referredBy || null,
           referralCount: 0,
-          queuePosition: totalCount + 1,
+          queuePosition: finalPosition,
           vaultSignature: signature,
           revenueReady: true
         });
@@ -211,7 +230,7 @@ export default function LandingPage() {
       localStorage.setItem('ksma_enrollment_lock', Date.now().toString());
 
       setReferralCode(myReferralCode);
-      setQueuePosition(totalCount + 1);
+      setQueuePosition(finalPosition);
       setIsSubmitted(true);
 
       // Track conversion in GA4
@@ -255,12 +274,7 @@ export default function LandingPage() {
     window.open(`viber://forward?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900 font-sans selection:bg-rose-100 relative">
@@ -837,27 +851,60 @@ function DambanaNgKalinga() {
 }
 
 function MatchCounter() {
+  const [count, setCount] = useState<number | null>(null);
+  const FOUNDERS_BASE = 120;
+  const GOAL = 500;
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      try {
+        if (!db) return;
+        const snapshot = await getCountFromServer(collection(db, 'waitlist'));
+        setCount(snapshot.data().count);
+      } catch (err) {
+        VaultLogger.error("Failed to fetch live count:", err);
+      }
+    };
+    fetchCount();
+  }, []);
+
+  const totalFamilies = FOUNDERS_BASE + (count || 0);
+  const progressPercent = Math.min((totalFamilies / GOAL) * 100, 100);
+
   return (
-    <div className="max-w-md mx-auto bg-white rounded-[12px] p-6 border border-rose-200 shadow-sm space-y-4">
+    <div className="max-w-md mx-auto bg-white rounded-[12px] p-6 border border-rose-200 shadow-sm space-y-6">
       <div className="flex justify-between items-center pb-4 border-b border-stone-100">
         <div className="text-left">
-          <p className="text-rose-800 font-black text-2xl">100+</p>
-          <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Kabuuang Kalingang Hatid</p>
+          <p className="text-rose-800 font-black text-2xl">{count !== null ? `${totalFamilies}` : '120+'}</p>
+          <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Kabuuang Families</p>
         </div>
         <div className="h-10 w-[1px] bg-stone-100" />
         <div className="text-right">
-          <p className="text-rose-800 font-black text-2xl">2x Match</p>
-          <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Ang Tulong ng Kasama</p>
+          <p className="text-rose-800 font-black text-2xl">₱{(totalFamilies * 5).toLocaleString()}</p>
+          <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Projected Impact</p>
         </div>
       </div>
-      <div className="bg-rose-50 p-4 rounded-[12px] border border-rose-100">
+
+      <div className="space-y-2">
+        <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-stone-400">
+          <span>Sanctuary Progress</span>
+          <span>{totalFamilies} / {GOAL} Families</span>
+        </div>
+        <div className="h-2 bg-rose-50 rounded-full overflow-hidden border border-rose-100">
+          <motion.div 
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="h-full bg-rose-800"
+          />
+        </div>
+      </div>
+
+      <div className="bg-rose-50 p-4 rounded-[12px] border border-rose-100 italic">
         <p className="text-[11px] text-rose-900 font-bold leading-relaxed">
           Ang Bagong Pangako: Sa bawat pag-enroll ninyo sa ating Sanctuary (mula ₱149), ₱5 ay direktang mapupunta sa isang lokal na charity na kayo mismo ang pipili at bobotohan bawat buwan.
         </p>
       </div>
-      <p className="text-[11px] text-stone-500 font-medium">
-        *Bawat enrollment ay tutumbasan din ng aming Founders upang suportahan ang ating mga localized clinics.
-      </p>
     </div>
   );
 }
@@ -1023,7 +1070,7 @@ function AudioCard({ name, role, description, quote, color, voiceName }: { name:
 
 function TestimonialCard({ quote, author, role }: { quote: string, author: string, role: string }) {
   return (
-    <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-rose-100 space-y-6">
+    <div className="bg-white p-8 rounded-[12px] shadow-sm border border-rose-100 space-y-6">
       <div className="flex gap-1 text-amber-400">
         {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
       </div>
@@ -1093,9 +1140,9 @@ function PricingSection() {
 
 function PricingCard({ tier, price, description, features, isPopular }: { tier: string, price: string, description: string, features: string[], isPopular?: boolean }) {
   return (
-    <div className={`relative p-10 rounded-[24px] border ${isPopular ? 'border-rose-800 bg-rose-50 shadow-xl' : 'border-stone-100 bg-stone-50'} transition-all hover:scale-[1.02] flex flex-col h-full`}>
+    <div className={`relative px-6 py-8 md:p-10 rounded-[12px] border ${isPopular ? 'border-rose-800 bg-rose-50 shadow-xl' : 'border-stone-100 bg-stone-50'} transition-all hover:scale-[1.02] flex flex-col h-full`}>
       {isPopular && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-rose-800 text-white rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg">
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-rose-800 text-white rounded-[12px] text-[10px] font-bold uppercase tracking-widest shadow-lg">
           Most Trusted
         </div>
       )}
