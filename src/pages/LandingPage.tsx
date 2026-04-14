@@ -17,7 +17,8 @@ import {
   Star,
   Heart,
   Shield,
-  Activity
+  Activity,
+  MapPin
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Turnstile } from '@marsidev/react-turnstile';
@@ -283,7 +284,16 @@ export default function LandingPage() {
       <nav className={`fixed top-8 w-full z-50 px-6 py-4 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md border-b border-stone-200 shadow-sm' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <img src="/kasama-logo.webp" alt="Kasama PH Logo" className="w-8 h-8 object-contain" referrerPolicy="no-referrer" />
+            <img 
+              src="/kasama-logo.webp" 
+              alt="Kasama PH Logo" 
+              className="w-8 h-8 object-contain" 
+              width="32"
+              height="32"
+              loading="eager"
+              decoding="async"
+              referrerPolicy="no-referrer" 
+            />
             <span className="text-xl font-black tracking-tight">Kasama PH</span>
           </div>
           <div className="flex items-center gap-4 md:gap-8 font-medium text-stone-600">
@@ -371,6 +381,11 @@ export default function LandingPage() {
                 src="/kasama-grandparents-celebration.webp" 
                 alt="Kasama Characters" 
                 className="w-full h-full object-cover"
+                width="800"
+                height="1000"
+                loading="eager"
+                fetchpriority="high"
+                decoding="async"
                 referrerPolicy="no-referrer"
               />
             </div>
@@ -579,6 +594,8 @@ export default function LandingPage() {
 
       {/* Pricing Section */}
       <PricingSection />
+      <LocalTrustBanner />
+      <FAQSection />
 
       {/* Founding Families Waitlist Section */}
       <motion.section 
@@ -850,6 +867,28 @@ function DambanaNgKalinga() {
   );
 }
 
+function LocalTrustBanner() {
+  return (
+    <div className="bg-stone-100 py-12 px-6 border-y border-stone-200 min-h-[160px]">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="space-y-2 text-center md:text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-rose-800 text-white rounded-[12px] text-[10px] font-bold uppercase tracking-widest">
+            <MapPin className="w-3 h-3" />
+            Serving Laguna
+          </div>
+          <h3 className="text-2xl font-black text-stone-900">Local Sanctuary Coverage</h3>
+          <p className="text-stone-600 font-medium">Focused protector for families in <span className="text-rose-800 font-bold">San Pedro, Biñan, and Santa Rosa</span>.</p>
+        </div>
+        <div className="flex gap-8 items-center opacity-50 grayscale hover:grayscale-0 transition-all">
+          <span className="font-bold text-xl tracking-tighter">SAN PEDRO</span>
+          <span className="font-bold text-xl tracking-tighter">BIÑAN</span>
+          <span className="font-bold text-xl tracking-tighter">SANTA ROSA</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MatchCounter() {
   const [count, setCount] = useState<number | null>(null);
   const FOUNDERS_BASE = 120;
@@ -871,21 +910,42 @@ function MatchCounter() {
   const totalFamilies = FOUNDERS_BASE + (count || 0);
   const progressPercent = Math.min((totalFamilies / GOAL) * 100, 100);
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0 }
+  };
+
   return (
-    <div className="max-w-md mx-auto bg-white rounded-[12px] p-6 border border-rose-200 shadow-sm space-y-6">
+    <motion.div 
+      variants={container}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true }}
+      className="max-w-md mx-auto bg-white rounded-[12px] p-6 border border-rose-200 shadow-sm space-y-6 min-h-[340px]"
+    >
       <div className="flex justify-between items-center pb-4 border-b border-stone-100">
-        <div className="text-left">
+        <motion.div variants={item} className="text-left">
           <p className="text-rose-800 font-black text-2xl">{count !== null ? `${totalFamilies}` : '120+'}</p>
           <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Kabuuang Families</p>
-        </div>
+        </motion.div>
         <div className="h-10 w-[1px] bg-stone-100" />
-        <div className="text-right">
+        <motion.div variants={item} className="text-right">
           <p className="text-rose-800 font-black text-2xl">₱{(totalFamilies * 5).toLocaleString()}</p>
           <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Projected Impact</p>
-        </div>
+        </motion.div>
       </div>
 
-      <div className="space-y-2">
+      <motion.div variants={item} className="space-y-2">
         <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-stone-400">
           <span>Sanctuary Progress</span>
           <span>{totalFamilies} / {GOAL} Families</span>
@@ -893,19 +953,20 @@ function MatchCounter() {
         <div className="h-2 bg-rose-50 rounded-full overflow-hidden border border-rose-100">
           <motion.div 
             initial={{ width: 0 }}
-            animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
+            whileInView={{ width: `${progressPercent}%` }}
+            transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+            viewport={{ once: true }}
             className="h-full bg-rose-800"
           />
         </div>
-      </div>
+      </motion.div>
 
-      <div className="bg-rose-50 p-4 rounded-[12px] border border-rose-100 italic">
+      <motion.div variants={item} className="bg-rose-50 p-4 rounded-[12px] border border-rose-100 italic">
         <p className="text-[11px] text-rose-900 font-bold leading-relaxed">
-          Ang Bagong Pangako: Sa bawat pag-enroll ninyo sa ating Sanctuary (mula ₱149), ₱5 ay direktang mapupunta sa isang lokal na charity na kayo mismo ang pipili at bobotohan bawat buwan.
+          Ang Pangako Protocol: Sa bawat enrollment sa ating Sanctuary (mula ₱149), ₱5 ay mapupunta sa isang community-voted charity sa Laguna.
         </p>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -1135,6 +1196,49 @@ function PricingSection() {
         </div>
       </div>
     </motion.section>
+  );
+}
+
+function FAQSection() {
+  const faqs = [
+    {
+      q: "Magkano ang enrollment sa Kasama PH?",
+      a: "Ang enrollment sa ating Sanctuary ay nagsisimula sa ₱149 bawat buwan para sa Dignity Tier. Safe, simple, at abot-kaya para sa pamilyang Pilipino."
+    },
+    {
+      q: "Ano ang Pangako Protocol?",
+      a: "Ito ang aming pangako ng kalinga. Sa bawat ₱149 enrollment, ₱5 ay direktang mapupunta sa isang community-voted charity dito sa Laguna (San Pedro, Biñan, Santa Rosa)."
+    },
+    {
+      q: "Ligtas ba ang data ng aking Lolo at Lola?",
+      a: "Opo. Gamit ang aming 'Iron Vault' security standard, lahat ng PII (Personally Identifiable Information) ay shielded at protektado laban sa kahit anong threat."
+    }
+  ];
+
+  return (
+    <section className="py-24 bg-stone-50 px-6 min-h-[600px]">
+      <div className="max-w-3xl mx-auto space-y-12">
+        <div className="text-center space-y-4">
+          <h2 className="text-3xl font-black text-stone-900">Mga Tanong at Kasagutan</h2>
+          <p className="text-stone-600 font-medium">Lahat ng kailangan ninyong malaman tungkol sa kalinga ni Kasama.</p>
+        </div>
+        <div className="space-y-6">
+          {faqs.map((faq, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              viewport={{ once: true }}
+              className="bg-white p-6 rounded-[12px] border border-stone-200 shadow-sm"
+            >
+              <h4 className="font-bold text-rose-800 mb-2">Q: {faq.q}</h4>
+              <p className="text-sm text-stone-600 leading-relaxed font-medium">{faq.a}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
