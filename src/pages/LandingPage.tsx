@@ -40,9 +40,9 @@ const VaultLogger = {
 
 // --- Iron Vault: Strict Whitelist Regex ---
 const WHITE_LIST = {
-  EMAIL: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-  LOCATION: /^[a-zA-Z0-9\s,.-]+$/,
-  AGE: /^[0-9]{1,3}$/
+  NAME: /^[a-zA-Z\s.-]+$/,
+  VIBER: /^[0-9+-\s]{7,20}$/,
+  LOCATION: /^[a-zA-Z0-9\s,.-]+$/
 };
 
 // --- Sanctuary Utilities ---
@@ -81,14 +81,14 @@ const revealProps = {
 } as const;
 
 export default function LandingPage() {
-  const [email, setEmail] = useState('');
-  const [age, setAge] = useState('');
-  const [role, setRole] = useState('');
+  const [name, setName] = useState('');
+  const [viber, setViber] = useState('');
   const [location, setLocation] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [referralCode, setReferralCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showStickyCTA, setShowStickyCTA] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [referredBy, setReferredBy] = useState<string | null>(null);
@@ -105,7 +105,10 @@ export default function LandingPage() {
   const heroParallax = useTransform(heroScroll, [0, 1], [0, -40]);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+      setShowStickyCTA(window.scrollY > 800); // Show after Hero
+    };
     window.addEventListener('scroll', handleScroll);
 
     // Capture referral code from URL
@@ -131,7 +134,7 @@ export default function LandingPage() {
 
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !age || !role) return;
+    if (!name || !viber || !location) return;
     
     // 1. Extreme API Defense: Honey Pot Logic
     if (honeyPot) {
@@ -141,16 +144,16 @@ export default function LandingPage() {
     }
 
     // 2. Strict Whitelist Verification
-    if (!WHITE_LIST.EMAIL.test(email)) {
-      setError("Maling format ng email. Pakitingnan po ulit.");
+    if (!WHITE_LIST.NAME.test(name)) {
+      setError("Pakigamit lamang ang mga harakter na (A-Z) para sa iyong pangalan.");
+      return;
+    }
+    if (!WHITE_LIST.VIBER.test(viber)) {
+      setError("Maling format ng Viber number. Pakitingnan po ulit.");
       return;
     }
     if (!WHITE_LIST.LOCATION.test(location)) {
       setError("Pakigamit lamang ang mga harakter na (A-Z, 0-9, at bantas).");
-      return;
-    }
-    if (!WHITE_LIST.AGE.test(age)) {
-      setError("Pakilagay ang tamang edad.");
       return;
     }
 
@@ -174,7 +177,7 @@ export default function LandingPage() {
       }
 
       // 4. Request Signature (Obfuscation)
-      const signature = btoa(`${email}:${Date.now()}:${VAULT_SALT}`);
+      const signature = btoa(`${viber}:${Date.now()}:${VAULT_SALT}`);
 
       const waitlistRef = collection(db, 'waitlist');
       const myReferralCode = Math.random().toString(36).substring(7).toUpperCase();
@@ -213,9 +216,8 @@ export default function LandingPage() {
         // C. Create Waitlist Entry
         const newDocRef = doc(waitlistRef);
         transaction.set(newDocRef, {
-          email,
-          age: Number(age),
-          role,
+          name,
+          viber,
           location,
           timestamp: serverTimestamp(),
           referralCode: myReferralCode,
@@ -639,41 +641,24 @@ export default function LandingPage() {
                 
                 <div className="space-y-3">
                   <input 
-                    type="email" 
-                    placeholder="Email Address" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text" 
+                    placeholder="Kumpletong Pangalan (Full Name)" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     required
                     className="w-full px-6 py-4 bg-white border border-rose-200 rounded-[12px] text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-800 transition-all shadow-sm"
                   />
-                  <div className="flex gap-3">
-                    <input 
-                      type="number" 
-                      placeholder="Age" 
-                      value={age}
-                      onChange={(e) => setAge(e.target.value)}
-                      required
-                      min="1"
-                      max="120"
-                      className="w-1/4 px-6 py-4 bg-white border border-rose-200 rounded-[12px] text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-800 transition-all shadow-sm"
-                    />
-                    <select
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                      required
-                      className="w-3/4 px-6 py-4 bg-white border border-rose-200 rounded-[12px] text-stone-900 focus:outline-none focus:ring-2 focus:ring-rose-800 transition-all appearance-none bg-no-repeat bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%207l5%205%205-5%22%20stroke%3D%22%239f1239%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_1rem_center]"
-                    >
-                      <option value="" disabled>Who is signing up?</option>
-                      <option value="Senior Citizen">Senior Citizen (Lolo/Lola)</option>
-                      <option value="Son/Daughter">Son / Daughter</option>
-                      <option value="Grandchild">Grandchild (Apo)</option>
-                      <option value="Caregiver">Caregiver / Nurse</option>
-                      <option value="Other">Other Family Member</option>
-                    </select>
-                  </div>
                   <input 
                     type="text" 
-                    placeholder="City / Barangay (e.g. San Pedro, Laguna)" 
+                    placeholder="Viber Number (e.g. 09171234567)" 
+                    value={viber}
+                    onChange={(e) => setViber(e.target.value)}
+                    required
+                    className="w-full px-6 py-4 bg-white border border-rose-200 rounded-[12px] text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-800 transition-all shadow-sm"
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Lungsod / Barangay (e.g. San Pedro, Laguna)" 
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     required
@@ -831,7 +816,31 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+      {showStickyCTA && <StickyFoundingCTA />}
     </div>
+  );
+}
+
+function StickyFoundingCTA() {
+  return (
+    <motion.div 
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
+      className="fixed bottom-0 left-0 w-full z-[100] md:hidden p-4"
+    >
+      <div className="bg-rose-800/95 backdrop-blur-md rounded-[20px] p-4 flex items-center justify-between shadow-2xl border border-rose-700/50">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold text-rose-300 uppercase tracking-widest">Early Adopters</span>
+          <span className="text-white font-black tracking-tight">142 / 500 Families</span>
+        </div>
+        <button 
+          onClick={() => scrollToSection('waitlist')}
+          className="px-6 py-2 bg-white text-rose-800 rounded-[12px] font-bold text-sm shadow-sm active:scale-95 transition-transform"
+        >
+          Join Founding 100
+        </button>
+      </div>
+    </motion.div>
   );
 }
 
@@ -1163,6 +1172,7 @@ function PricingSection() {
             tier="Dignity & Clarity"
             price="149"
             description="Essential companion for seniors living with family."
+            isPopular
             features={[
               "120s Emergency Cascade",
               "Taglish Medication Logic",
@@ -1174,7 +1184,6 @@ function PricingSection() {
             tier="Guardian Command"
             price="649"
             description="Full oversight for families with active caregivers."
-            isPopular
             features={[
               "Everything in Tier 1",
               "Real-time Caregiver Logs",
@@ -1247,7 +1256,7 @@ function PricingCard({ tier, price, description, features, isPopular }: { tier: 
     <div className={`relative px-6 py-8 md:p-10 rounded-[12px] border ${isPopular ? 'border-rose-800 bg-rose-50 shadow-xl' : 'border-stone-100 bg-stone-50'} transition-all hover:scale-[1.02] flex flex-col h-full`}>
       {isPopular && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-rose-800 text-white rounded-[12px] text-[10px] font-bold uppercase tracking-widest shadow-lg">
-          Most Trusted
+          Founding Favored
         </div>
       )}
       <div className="space-y-4 mb-10">
@@ -1268,7 +1277,19 @@ function PricingCard({ tier, price, description, features, isPopular }: { tier: 
         ))}
       </ul>
 
-      <button className={`w-full mt-10 py-4 rounded-[12px] font-bold text-lg transition-all ${isPopular ? 'bg-rose-800 text-white hover:bg-rose-900 shadow-lg shadow-rose-900/20' : 'bg-white text-rose-800 border-2 border-rose-800 hover:bg-rose-50'}`}>
+      {isPopular && (
+        <div className="mt-8 p-3 bg-white border border-rose-200 rounded-[12px] text-center">
+          <p className="text-[10px] font-bold text-rose-800 uppercase tracking-widest flex items-center justify-center gap-2">
+            <Heart className="w-3 h-3 fill-current" />
+            ₱5 Kalinga Match Included
+          </p>
+        </div>
+      )}
+
+      <button 
+        onClick={() => scrollToSection('waitlist')}
+        className={`w-full mt-10 py-4 rounded-[12px] font-bold text-lg transition-all ${isPopular ? 'bg-rose-800 text-white hover:bg-rose-900 shadow-lg shadow-rose-900/20' : 'bg-white text-rose-800 border-2 border-rose-800 hover:bg-rose-50'}`}
+      >
         Secure This Tier
       </button>
     </div>
