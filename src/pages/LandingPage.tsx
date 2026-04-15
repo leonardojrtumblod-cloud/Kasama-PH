@@ -20,6 +20,18 @@ import {
   Activity,
   MapPin
 } from 'lucide-react';
+
+const TikTokIcon = ({ size = 20 }: { size?: number }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/>
+  </svg>
+);
 import { Link } from 'react-router-dom';
 import { Turnstile } from '@marsidev/react-turnstile';
 import ReactGA from 'react-ga4';
@@ -54,15 +66,15 @@ const scrollToSection = (id: string) => {
 };
 
 const LogicBar = () => (
-  <div className="sticky top-0 z-[60] bg-rose-900 text-white/90 py-1.5 px-6 flex justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] border-b border-rose-800/50">
-    <div className="flex items-center gap-4 sm:gap-6">
+  <div className="sticky top-0 left-0 right-0 w-full z-[60] bg-rose-900 text-white/90 py-1.5 px-4 sm:px-6 flex justify-between items-center text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] border-b border-rose-800/50">
+    <div className="flex items-center gap-3 sm:gap-6">
       <div className="flex items-center gap-2">
         <div className="w-1 h-1 bg-rose-400 rounded-full" />
-        <span>The Sanctuary</span>
+        <span className="hidden xs:inline">The </span>Sanctuary
       </div>
       <span className="opacity-20">|</span>
-      <span>Safety Cascade</span>
-      <span className="opacity-20">|</span>
+      <span className="hidden sm:inline">Safety Cascade</span>
+      <span className="hidden sm:inline opacity-20">|</span>
       <button onClick={() => scrollToSection('pricing')} className="hover:text-rose-400 transition-colors uppercase">Pricing</button>
     </div>
     <div className="flex items-center gap-2 text-rose-300">
@@ -239,8 +251,6 @@ export default function LandingPage() {
       // Track conversion in GA4
       if (import.meta.env.VITE_GA_MEASUREMENT_ID) {
         ReactGA.event('waitlist_signup', {
-          role: role,
-          age: Number(age),
           referral_source: referredBy || 'direct'
         });
       }
@@ -386,7 +396,7 @@ export default function LandingPage() {
                 width="800"
                 height="1000"
                 loading="eager"
-                fetchpriority="high"
+                fetchPriority="high"
                 decoding="async"
                 referrerPolicy="no-referrer"
               />
@@ -721,7 +731,7 @@ export default function LandingPage() {
                 <div className="flex justify-center gap-4">
                   {[
                     { icon: <Facebook />, bg: 'bg-blue-600', action: shareOnFacebook },
-                    { icon: <Twitter />, bg: 'bg-sky-500', action: shareOnTwitter },
+                    { icon: <TikTokIcon />, bg: 'bg-black', action: () => window.open('https://tiktok.com/@kasama.ph', '_blank') },
                     { icon: <MessageSquare />, bg: 'bg-purple-600', action: shareOnViber }
                   ].map((social, i) => (
                     <button 
@@ -786,7 +796,7 @@ export default function LandingPage() {
               <span className="text-xl font-black tracking-tight text-stone-900">Kasama PH</span>
             </div>
             <p className="text-sm font-medium text-stone-500 max-w-sm">
-              The first clinical-grade safety net for Filipino seniors. Standardizing care, one community at a time.
+              The first senior app for Filipino families. Standardizing care, one community at a time.
             </p>
             <div className="flex gap-6 text-[11px] font-bold text-stone-400 uppercase tracking-widest pt-4">
               <Link to="/privacy" className="hover:text-rose-800 transition-colors">Privacy Policy</Link>
@@ -797,17 +807,23 @@ export default function LandingPage() {
           <div className="space-y-4 text-center md:text-right">
             <p className="text-xs font-bold text-rose-800 uppercase tracking-widest">Sanctuary Coverage</p>
             <p className="text-sm font-medium text-stone-600">
-              Protecting families in San Pedro, Biñan, Muntinlupa,<br />and 1,000+ communities nationwide.
+              Protecting families across the Philippines.
             </p>
           </div>
 
           <div className="flex flex-col items-center md:items-end gap-4">
             <div className="flex gap-4">
-              <button className="p-3 bg-white border border-stone-200 text-stone-400 rounded-[12px] hover:text-rose-800 transition-colors shadow-sm">
+              <button 
+                onClick={() => window.open('https://facebook.com/kasamaph', '_blank')}
+                className="p-3 bg-white border border-stone-200 text-stone-400 rounded-[12px] hover:text-rose-800 transition-colors shadow-sm"
+              >
                 <Facebook className="w-5 h-5" />
               </button>
-              <button className="p-3 bg-white border border-stone-200 text-stone-400 rounded-[12px] hover:text-rose-800 transition-colors shadow-sm">
-                <Twitter className="w-5 h-5" />
+              <button 
+                onClick={() => window.open('https://tiktok.com/@kasama.ph', '_blank')}
+                className="p-3 bg-white border border-stone-200 text-stone-400 rounded-[12px] hover:text-rose-800 transition-colors shadow-sm"
+              >
+                <TikTokIcon size={20} />
               </button>
             </div>
             <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">
@@ -826,9 +842,9 @@ function StickyFoundingCTA() {
     <motion.div 
       initial={{ y: 100 }}
       animate={{ y: 0 }}
-      className="fixed bottom-0 left-0 w-full z-[100] md:hidden p-4"
+      className="fixed bottom-0 left-0 right-0 w-full z-[100] md:hidden p-4 box-border"
     >
-      <div className="bg-rose-800/95 backdrop-blur-md rounded-[20px] p-4 flex items-center justify-between shadow-2xl border border-rose-700/50">
+      <div className="w-full max-w-full bg-rose-800/95 backdrop-blur-md rounded-[20px] p-4 flex items-center justify-between shadow-2xl border border-rose-700/50 box-border">
         <div className="flex flex-col">
           <span className="text-[10px] font-bold text-rose-300 uppercase tracking-widest">Early Adopters</span>
           <span className="text-white font-black tracking-tight">142 / 500 Families</span>
@@ -940,7 +956,7 @@ function MatchCounter() {
       initial="hidden"
       whileInView="show"
       viewport={{ once: true }}
-      className="max-w-md mx-auto bg-white rounded-[12px] p-6 border border-rose-200 shadow-sm space-y-6 min-h-[340px]"
+      className="w-full max-w-md mx-auto bg-white rounded-[12px] p-6 border border-rose-200 shadow-sm space-y-6 min-h-[340px] box-border"
     >
       <div className="flex justify-between items-center pb-4 border-b border-stone-100">
         <motion.div variants={item} className="text-left">
